@@ -13,7 +13,7 @@ afterAll(() => {
 });
 
 describe("Sad Paths", () => {
-  test("status 404, responds for invalid paths", () => {
+  test("status 404: responds for invalid paths", () => {
     return request(app)
       .get("/api/topicks")
       .expect(404)
@@ -24,11 +24,13 @@ describe("Sad Paths", () => {
 });
 
 describe("3. GET /api/topics", () => {
-  test("status:200, responds with an array of topic objects", () => {
+  test("status 200: responds with an array of topic objects", () => {
     return request(app)
       .get("/api/topics")
       .expect(200)
       .then(({ body: { topics } }) => {
+        expect(topics).toBeInstanceOf(Array);
+        expect(topics).toHaveLength(3);
         topics.forEach((topic) => {
           expect(topic).toEqual(
             expect.objectContaining({
