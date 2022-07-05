@@ -42,9 +42,8 @@ describe("3. GET /api/topics", () => {
 
 describe("4. GET /api/articles/:article_id", () => {
   test("status 200: responds with an article object containing the following properties", () => {
-    const article_id = 1;
     return request(app)
-      .get(`/api/articles/${article_id}`)
+      .get("/api/articles/1")
       .expect(200)
       .then(({ body }) => {
         expect(body).toBeInstanceOf(Object);
@@ -80,7 +79,7 @@ describe("4. GET /api/articles/:article_id", () => {
         );
       });
   });
-  test("status 404: responds for invalid paths in article ids", () => {
+  test("status 404: responds for article_id path that there is not exist", () => {
     return request(app)
       .get("/api/articles/30000000")
       .expect(404)
@@ -88,7 +87,7 @@ describe("4. GET /api/articles/:article_id", () => {
         expect(msg).toBe("No article found for article_id: 30000000");
       });
   });
-  test("status 400: responds for bad requests", () => {
+  test("status 400: responds for invalid data article_id path", () => {
     return request(app)
       .get("/api/articles/hello")
       .expect(400)
@@ -100,12 +99,10 @@ describe("4. GET /api/articles/:article_id", () => {
 
 describe("5. PATCH /api/articles/:article_id", () => {
   test("status 200: responds with an updated article object incrementing the votes", () => {
-    const article_id = 1;
-    const updatedArticle = { inc_votes: 1 };
     return request(app)
-      .patch(`/api/articles/${article_id}`)
-      .send(updatedArticle)
-      .expect(202)
+      .patch("/api/articles/1")
+      .send({ inc_votes: 1 })
+      .expect(200)
       .then(({ body }) => {
         expect(body).toBeInstanceOf(Object);
         expect(body).toEqual(
@@ -122,12 +119,10 @@ describe("5. PATCH /api/articles/:article_id", () => {
       });
   });
   test("status 200: responds with an updated article object decrementing the votes", () => {
-    const article_id = 4;
-    const updatedArticle = { inc_votes: -10 };
     return request(app)
-      .patch(`/api/articles/${article_id}`)
-      .send(updatedArticle)
-      .expect(202)
+      .patch("/api/articles/4")
+      .send({ inc_votes: -10 })
+      .expect(200)
       .then(({ body }) => {
         expect(body).toBeInstanceOf(Object);
         expect(body).toEqual(
@@ -143,7 +138,7 @@ describe("5. PATCH /api/articles/:article_id", () => {
         );
       });
   });
-  test("status 404: responds for invalid paths in article ids", () => {
+  test("status 404: responds for article_id that there is not exist", () => {
     return request(app)
       .get("/api/articles/50000000")
       .expect(404)
@@ -151,9 +146,26 @@ describe("5. PATCH /api/articles/:article_id", () => {
         expect(msg).toBe("No article found for article_id: 50000000");
       });
   });
-  test("status 400: responds for bad requests", () => {
+  test("status 400: responds for invalid data article_id path", () => {
     return request(app)
       .get("/api/articles/hi")
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("Bad request: Invalid input");
+      });
+  });
+  test("status 400: responds when patch request sent with invalid data type", () => {
+    return request(app)
+      .patch("/api/articles/1")
+      .send({ inc_votes: "thirty" })
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("Bad request: Invalid input");
+      });
+  });
+  test("status 400: responds when patch request sent with no data", () => {
+    return request(app)
+      .patch("/api/articles/1")
       .expect(400)
       .then(({ body: { msg } }) => {
         expect(msg).toBe("Bad request: Invalid input");
