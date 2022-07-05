@@ -19,3 +19,20 @@ exports.selectArticleById = (article_id) => {
       return results.rows[0];
     });
 };
+
+exports.updateArticleById = (article_id, newVote) => {
+  return db
+    .query(
+      "UPDATE articles SET votes = votes + $2 WHERE article_id = $1 RETURNING *;",
+      [article_id, newVote]
+    )
+    .then((results) => {
+      if (!results.rows[0]) {
+        return Promise.reject({
+          status: 404,
+          msg: `No article found for article_id: ${article_id}`,
+        });
+      }
+      return results.rows[0];
+    });
+};
