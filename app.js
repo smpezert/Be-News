@@ -9,8 +9,14 @@ app.get("/api/topics", getTopics);
 
 app.get("/api/articles/:article_id", getArticleById);
 
-app.use("*", (req, res, next) => {
+app.use("*", (req, res) => {
   res.status(404).send({ msg: "Invalid path" });
+});
+
+app.use((err, req, res, next) => {
+  if (err.status && err.msg) {
+    res.status(err.status).send({ msg: err.msg });
+  } else next(err);
 });
 
 app.use((err, req, res, next) => {
