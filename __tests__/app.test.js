@@ -21,6 +21,14 @@ describe("Sad Paths", () => {
         expect(msg).toBe("Invalid path");
       });
   });
+  test("status 400: responds for bad requests", () => {
+    return request(app)
+      .get("/api/articles/hello")
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("Bad request: Invalid input");
+      });
+  });
 });
 
 describe("3. GET /api/topics", () => {
@@ -39,6 +47,29 @@ describe("3. GET /api/topics", () => {
             })
           );
         });
+      });
+  });
+});
+
+describe("4. GET /api/articles/:article_id", () => {
+  test("status 200: responds with an article object containing the following properties", () => {
+    const article_id = 1;
+    return request(app)
+      .get(`/api/articles/${article_id}`)
+      .expect(200)
+      .then(({ body }) => {
+        expect(body).toBeInstanceOf(Object);
+        expect(body).toEqual(
+          expect.objectContaining({
+            article_id: expect.any(Number),
+            title: expect.any(String),
+            topic: expect.any(String),
+            author: expect.any(String),
+            body: expect.any(String),
+            created_at: expect.any(String),
+            votes: expect.any(Number),
+          })
+        );
       });
   });
 });
