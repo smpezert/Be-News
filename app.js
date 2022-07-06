@@ -1,6 +1,7 @@
 const express = require("express");
 const {
   getTopics,
+  getArticles,
   getArticleById,
   patchArticleById,
   getUsers,
@@ -11,6 +12,8 @@ const app = express();
 app.use(express.json());
 
 app.get("/api/topics", getTopics);
+
+app.get("/api/articles", getArticles);
 
 app.get("/api/articles/:article_id", getArticleById);
 

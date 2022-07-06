@@ -12,7 +12,7 @@ afterAll(() => {
   if (db.end) db.end();
 });
 
-describe("3. GET /api/topics", () => {
+describe("GET /api/topics", () => {
   test("status 200: responds with an array of topic objects", () => {
     return request(app)
       .get("/api/topics")
@@ -40,7 +40,57 @@ describe("3. GET /api/topics", () => {
   });
 });
 
-describe("4. GET /api/articles/:article_id", () => {
+describe("GET /api/articles", () => {
+  test("status 200: responds with an articles array of articles objects with the following properties", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then(({ body: { articles } }) => {
+        expect(articles).toBeInstanceOf(Array);
+        expect(articles).toHaveLength(36);
+        articles.forEach((article) => {
+          expect(article).toEqual(
+            expect.objectContaining({
+              author: expect.any(String),
+              title: expect.any(String),
+              article_id: expect.any(Number),
+              topic: expect.any(String),
+              created_at: expect.any(String),
+              votes: expect.any(Number),
+            })
+          );
+        });
+      });
+  });
+  test("status 200: responds with an articles array of articles objects that also have a comment_count property", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then(({ body: { articles } }) => {
+        articles.forEach((article) => {
+          expect(article).toHaveProperty("comment_count");
+        });
+      });
+  });
+  test("status 200: responds with the articles array sorted by date in descending order", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then(({ body: { articles } }) => {
+        expect(articles).toBeSortedBy("created_at", { descending: true });
+      });
+  });
+  test("status 404: responds for invalid paths in articles", () => {
+    return request(app)
+      .get("/api/articules")
+      .expect(404)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("Invalid path");
+      });
+  });
+});
+
+describe("GET /api/articles/:article_id", () => {
   test("status 200: responds with an article object containing the following properties", () => {
     return request(app)
       .get("/api/articles/1")
@@ -97,7 +147,7 @@ describe("4. GET /api/articles/:article_id", () => {
   });
 });
 
-describe("5. PATCH /api/articles/:article_id", () => {
+describe("PATCH /api/articles/:article_id", () => {
   test("status 200: responds with an updated article object incrementing the votes", () => {
     return request(app)
       .patch("/api/articles/1")
@@ -173,7 +223,7 @@ describe("5. PATCH /api/articles/:article_id", () => {
   });
 });
 
-describe("6. GET /api/users", () => {
+describe("GET /api/users", () => {
   test("status 200: responds with an array of user objects", () => {
     return request(app)
       .get("/api/users")
@@ -198,6 +248,6 @@ describe("6. GET /api/users", () => {
       .expect(404)
       .then(({ body: { msg } }) => {
         expect(msg).toBe("Invalid path");
-    });
+      });
   });
 });
