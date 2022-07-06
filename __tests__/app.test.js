@@ -12,7 +12,7 @@ afterAll(() => {
   if (db.end) db.end();
 });
 
-describe("3. GET /api/topics", () => {
+describe("GET /api/topics", () => {
   test("status 200: responds with an array of topic objects", () => {
     return request(app)
       .get("/api/topics")
@@ -40,7 +40,7 @@ describe("3. GET /api/topics", () => {
   });
 });
 
-describe("4. GET /api/articles/:article_id", () => {
+describe("GET /api/articles/:article_id", () => {
   test("status 200: responds with an article object containing the following properties", () => {
     return request(app)
       .get("/api/articles/1")
@@ -79,6 +79,24 @@ describe("4. GET /api/articles/:article_id", () => {
         );
       });
   });
+  test("status 200: (comment_count) responds with an article object including comment count property", () => {
+    return request(app)
+      .get("/api/articles/1")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body).toHaveProperty("comment_count");
+        expect(body.comment_count).toBe("8");
+      });
+  });
+  test("status 200: (comment_count) responds with the right data type of comment count ", () => {
+    return request(app)
+      .get("/api/articles/1")
+      .expect(200)
+      .then(({ body: { comment_count } }) => {
+        expect(typeof +comment_count).toBe("number");
+        expect(+comment_count).not.toBeNaN();
+      });
+  });
   test("status 404: responds for article_id path that there is not exist", () => {
     return request(app)
       .get("/api/articles/30000000")
@@ -97,7 +115,7 @@ describe("4. GET /api/articles/:article_id", () => {
   });
 });
 
-describe("5. PATCH /api/articles/:article_id", () => {
+describe("PATCH /api/articles/:article_id", () => {
   test("status 200: responds with an updated article object incrementing the votes", () => {
     return request(app)
       .patch("/api/articles/1")
@@ -173,7 +191,7 @@ describe("5. PATCH /api/articles/:article_id", () => {
   });
 });
 
-describe("6. GET /api/users", () => {
+describe("GET /api/users", () => {
   test("status 200: responds with an array of user objects", () => {
     return request(app)
       .get("/api/users")
@@ -198,6 +216,6 @@ describe("6. GET /api/users", () => {
       .expect(404)
       .then(({ body: { msg } }) => {
         expect(msg).toBe("Invalid path");
-    });
+      });
   });
 });
