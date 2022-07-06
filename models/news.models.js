@@ -42,3 +42,9 @@ exports.updateArticleById = (article_id, newVote) => {
         return results.rows[0];
       });
 };
+
+exports.selectUsers = () => {
+  return db.query("SELECT * FROM users;").then((results) => {
+    return results.rows;
+  });
+});

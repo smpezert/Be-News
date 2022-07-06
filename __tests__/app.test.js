@@ -172,3 +172,32 @@ describe("5. PATCH /api/articles/:article_id", () => {
       });
   });
 });
+
+describe("6. GET /api/users", () => {
+  test("status 200: responds with an array of user objects", () => {
+    return request(app)
+      .get("/api/users")
+      .expect(200)
+      .then(({ body: { users } }) => {
+        expect(users).toBeInstanceOf(Array);
+        expect(users).toHaveLength(6);
+        users.forEach((user) => {
+          expect(user).toEqual(
+            expect.objectContaining({
+              username: expect.any(String),
+              name: expect.any(String),
+              avatar_url: expect.any(String),
+            })
+          );
+        });
+      });
+  });
+  test("status 404: responds for invalid paths in users", () => {
+    return request(app)
+      .get("/api/userz")
+      .expect(404)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("Invalid path");
+    });
+  });
+});
