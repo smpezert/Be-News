@@ -57,18 +57,9 @@ describe("GET /api/articles", () => {
               topic: expect.any(String),
               created_at: expect.any(String),
               votes: expect.any(Number),
+              comment_count: expect.any(Number),
             })
           );
-        });
-      });
-  });
-  test("status 200: responds with an articles array of articles objects that also have a comment_count property", () => {
-    return request(app)
-      .get("/api/articles")
-      .expect(200)
-      .then(({ body: { articles } }) => {
-        articles.forEach((article) => {
-          expect(article).toHaveProperty("comment_count");
         });
       });
   });
