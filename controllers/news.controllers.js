@@ -1,5 +1,6 @@
 const {
   selectTopics,
+  selectArticles,
   selectArticleById,
   updateArticleById,
   selectUsers,
@@ -9,6 +10,16 @@ exports.getTopics = (req, res, next) => {
   selectTopics()
     .then((topic) => {
       res.status(200).send({ topics: topic });
+    })
+    .catch((error) => {
+      next(error);
+    });
+};
+
+exports.getArticles = (req, res, next) => {
+  selectArticles()
+    .then((article) => {
+      res.status(200).send({ articles: article });
     })
     .catch((error) => {
       next(error);
