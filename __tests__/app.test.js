@@ -129,6 +129,24 @@ describe("GET /api/articles/:article_id", () => {
         );
       });
   });
+  test("status 200: (comment_count) responds with an article object including comment count property", () => {
+    return request(app)
+      .get("/api/articles/1")
+      .expect(200)
+      .then(({ body }) => {
+        expect(body).toHaveProperty("comment_count");
+        expect(body.comment_count).toBe("8");
+      });
+  });
+  test("status 200: (comment_count) responds with the right data type of comment count ", () => {
+    return request(app)
+      .get("/api/articles/1")
+      .expect(200)
+      .then(({ body: { comment_count } }) => {
+        expect(typeof +comment_count).toBe("number");
+        expect(+comment_count).not.toBeNaN();
+      });
+  });
   test("status 404: responds for article_id path that there is not exist", () => {
     return request(app)
       .get("/api/articles/30000000")
