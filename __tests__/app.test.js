@@ -2,7 +2,7 @@ const app = require("../app");
 const db = require("../db/connection");
 const request = require("supertest");
 const seed = require("../db/seeds/seed");
-const testData = require("../db/data/development-data");
+const testData = require("../db/data/test-data");
 
 beforeEach(() => {
   return seed(testData);
@@ -110,12 +110,12 @@ describe("GET /api/articles/:article_id", () => {
         expect(body).toEqual(
           expect.objectContaining({
             article_id: 1,
-            title: "Running a Node App",
-            topic: "coding",
-            author: "jessjelly",
-            body: "This is part two of a series on how to get up and running with Systemd and Node.js. This part dives deeper into how to successfully run your app with systemd long-term, and how to set it up in a production environment.",
-            created_at: "2020-11-07T06:03:00.000Z",
-            votes: 0,
+            title: "Living in the shadow of a great man",
+            topic: "mitch",
+            author: "butter_bridge",
+            body: "I find this existence challenging",
+            created_at: "2020-07-09T20:11:00.000Z",
+            votes: 100,
           })
         );
       });
@@ -126,7 +126,7 @@ describe("GET /api/articles/:article_id", () => {
       .expect(200)
       .then(({ body }) => {
         expect(body).toHaveProperty("comment_count");
-        expect(body.comment_count).toBe("8");
+        expect(body.comment_count).toBe("11");
       });
   });
   test("status 200: (comment_count) responds with the right data type of comment count ", () => {
@@ -156,6 +156,62 @@ describe("GET /api/articles/:article_id", () => {
   });
 });
 
+describe("GET /api/articles/:article_id/comments", () => {
+  test("status 200: responds with a comments array for the given article_id in which the comment objects have the following properties", () => {
+    return request(app)
+      .get("/api/articles/1/comments")
+      .expect(200)
+      .then(({ body: { comments } }) => {
+        expect(comments).toBeInstanceOf(Array);
+        expect(comments).toHaveLength(11);
+        comments.forEach((comment) => {
+          expect(comment.article_id).toBe(1);
+          expect(comment).toEqual(
+            expect.objectContaining({
+              comment_id: expect.any(Number),
+              votes: expect.any(Number),
+              created_at: expect.any(String),
+              author: expect.any(String),
+              body: expect.any(String),
+            })
+          );
+        });
+      });
+  });
+  test("status 200: responds with an empty comments array when passed a valid article_id", () => {
+    return request(app)
+      .get("/api/articles/2/comments")
+      .expect(200)
+      .then(({ body: { comments } }) => {
+        expect(comments).toHaveLength(0);
+      });
+  });
+  test("status 404: responds for invalid paths in comments", () => {
+    return request(app)
+      .get("/api/articles/2/coments")
+      .expect(404)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("Invalid path");
+      });
+  });
+  test("status 404: responds for article_id that doesn't exist", () => {
+    return request(app)
+      .get("/api/articles/528694/comments")
+      .expect(404)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("No article found for article_id: 528694");
+      });
+  });
+  test("status 400: responds for invalid data article_id path", () => {
+    return request(app)
+      .get("/api/articles/bannanas/comments")
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("Bad request: Invalid input");
+      });
+  });
+});
+
 describe("PATCH /api/articles/:article_id", () => {
   test("status 200: responds with an updated article object incrementing the votes", () => {
     return request(app)
@@ -167,12 +223,12 @@ describe("PATCH /api/articles/:article_id", () => {
         expect(body).toEqual(
           expect.objectContaining({
             article_id: 1,
-            title: "Running a Node App",
-            topic: "coding",
-            author: "jessjelly",
-            body: "This is part two of a series on how to get up and running with Systemd and Node.js. This part dives deeper into how to successfully run your app with systemd long-term, and how to set it up in a production environment.",
-            created_at: "2020-11-07T06:03:00.000Z",
-            votes: 1,
+            title: "Living in the shadow of a great man",
+            topic: "mitch",
+            author: "butter_bridge",
+            body: "I find this existence challenging",
+            created_at: "2020-07-09T20:11:00.000Z",
+            votes: 101,
           })
         );
       });
@@ -187,11 +243,11 @@ describe("PATCH /api/articles/:article_id", () => {
         expect(body).toEqual(
           expect.objectContaining({
             article_id: 4,
-            title: "Making sense of Redux",
-            topic: "coding",
-            author: "jessjelly",
-            body: "When I first started learning React, I remember reading lots of articles about the different technologies associated with it. In particular, this one article stood out. It mentions how confusing the ecosystem is, and how developers often feel they have to know ALL of the ecosystem before using React. And as someone who’s used React daily for the past 8 months or so, I can definitely say that I’m still barely scratching the surface in terms of understanding how the entire ecosystem works! But my time spent using React has given me some insight into when and why it might be appropriate to use another technology — Redux (a variant of the Flux architecture).",
-            created_at: "2020-09-11T20:12:00.000Z",
+            title: "Student SUES Mitch!",
+            topic: "mitch",
+            author: "rogersop",
+            body: "We all love Mitch and his wonderful, unique typing style. However, the volume of his typing has ALLEGEDLY burst another students eardrums, and they are now suing for damages",
+            created_at: "2020-05-06T01:14:00.000Z",
             votes: -10,
           })
         );
@@ -239,7 +295,7 @@ describe("GET /api/users", () => {
       .expect(200)
       .then(({ body: { users } }) => {
         expect(users).toBeInstanceOf(Array);
-        expect(users).toHaveLength(6);
+        expect(users).toHaveLength(4);
         users.forEach((user) => {
           expect(user).toEqual(
             expect.objectContaining({
