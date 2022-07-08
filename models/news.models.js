@@ -33,14 +33,6 @@ exports.selectArticleById = (article_id) => {
     });
 };
 
-exports.selectCommentsByArticleId = (article_id) => {
-  return db
-    .query("SELECT * FROM comments WHERE article_id = $1;", [article_id])
-    .then((results) => {
-      return results.rows;
-    });
-};
-
 exports.updateArticleById = (article_id, newVote) => {
   if (!newVote) {
     return Promise.reject({
@@ -62,6 +54,43 @@ exports.updateArticleById = (article_id, newVote) => {
         }
         return results.rows[0];
       });
+};
+
+exports.selectCommentsByArticleId = (article_id) => {
+  return db
+    .query("SELECT * FROM comments WHERE article_id = $1;", [article_id])
+    .then((results) => {
+      return results.rows;
+    });
+};
+
+exports.addComment = (article_id, username, body) => {
+  if (!username) {
+    return Promise.reject({
+      status: 400,
+      msg: "Bad request: Invalid input in username",
+    });
+  }
+  if (!body) {
+    return Promise.reject({
+      status: 400,
+      msg: "Bad request: Invalid input in body",
+    });
+  }
+  return db
+    .query("SELECT username FROM users WHERE username = $1", [username])
+    .then((usernames) => {
+      return usernames.rows;
+    })
+    .then(() => {
+      return db.query(
+        "INSERT INTO comments (article_id, author, body, votes) VALUES ($1, $2, $3, 0) RETURNING *;",
+        [article_id, username, body]
+      );
+    })
+    .then((results) => {
+      return results.rows[0];
+    });
 };
 
 exports.selectUsers = () => {
