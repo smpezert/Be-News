@@ -2,8 +2,9 @@ const {
   selectTopics,
   selectArticles,
   selectArticleById,
-  selectCommentsByArticleId,
   updateArticleById,
+  selectCommentsByArticleId,
+  addComment,
   selectUsers,
 } = require("../models/news.models");
 
@@ -38,6 +39,18 @@ exports.getArticleById = (req, res, next) => {
     });
 };
 
+exports.patchArticleById = (req, res, next) => {
+  const { article_id } = req.params;
+  const { inc_votes } = req.body;
+  updateArticleById(article_id, inc_votes)
+    .then((updatedArticle) => {
+      res.status(200).send(updatedArticle);
+    })
+    .catch((error) => {
+      next(error);
+    });
+};
+
 exports.getCommentsByArticleId = (req, res, next) => {
   const { article_id } = req.params;
 
@@ -53,12 +66,17 @@ exports.getCommentsByArticleId = (req, res, next) => {
     });
 };
 
-exports.patchArticleById = (req, res, next) => {
+exports.postComments = (req, res, next) => {
   const { article_id } = req.params;
-  const { inc_votes } = req.body;
-  updateArticleById(article_id, inc_votes)
-    .then((updatedArticle) => {
-      res.status(200).send(updatedArticle);
+  const { username, body } = req.body;
+
+  Promise.all([
+    addComment(article_id, username, body),
+    selectArticleById(article_id),
+    selectCommentsByArticleId(article_id),
+  ])
+    .then(([newComment]) => {
+      res.status(201).send({ comment: newComment });
     })
     .catch((error) => {
       next(error);

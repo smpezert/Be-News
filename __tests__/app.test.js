@@ -47,7 +47,7 @@ describe("GET /api/articles", () => {
       .expect(200)
       .then(({ body: { articles } }) => {
         expect(articles).toBeInstanceOf(Array);
-        expect(articles).toHaveLength(36);
+        expect(articles).toHaveLength(12);
         articles.forEach((article) => {
           expect(article).toEqual(
             expect.objectContaining({
@@ -57,7 +57,7 @@ describe("GET /api/articles", () => {
               topic: expect.any(String),
               created_at: expect.any(String),
               votes: expect.any(Number),
-              comment_count: expect.any(Number),
+              comment_count: expect.any(String),
             })
           );
         });
@@ -156,62 +156,6 @@ describe("GET /api/articles/:article_id", () => {
   });
 });
 
-describe("GET /api/articles/:article_id/comments", () => {
-  test("status 200: responds with a comments array for the given article_id in which the comment objects have the following properties", () => {
-    return request(app)
-      .get("/api/articles/1/comments")
-      .expect(200)
-      .then(({ body: { comments } }) => {
-        expect(comments).toBeInstanceOf(Array);
-        expect(comments).toHaveLength(11);
-        comments.forEach((comment) => {
-          expect(comment.article_id).toBe(1);
-          expect(comment).toEqual(
-            expect.objectContaining({
-              comment_id: expect.any(Number),
-              votes: expect.any(Number),
-              created_at: expect.any(String),
-              author: expect.any(String),
-              body: expect.any(String),
-            })
-          );
-        });
-      });
-  });
-  test("status 200: responds with an empty comments array when passed a valid article_id", () => {
-    return request(app)
-      .get("/api/articles/2/comments")
-      .expect(200)
-      .then(({ body: { comments } }) => {
-        expect(comments).toHaveLength(0);
-      });
-  });
-  test("status 404: responds for invalid paths in comments", () => {
-    return request(app)
-      .get("/api/articles/2/coments")
-      .expect(404)
-      .then(({ body: { msg } }) => {
-        expect(msg).toBe("Invalid path");
-      });
-  });
-  test("status 404: responds for article_id that doesn't exist", () => {
-    return request(app)
-      .get("/api/articles/528694/comments")
-      .expect(404)
-      .then(({ body: { msg } }) => {
-        expect(msg).toBe("No article found for article_id: 528694");
-      });
-  });
-  test("status 400: responds for invalid data article_id path", () => {
-    return request(app)
-      .get("/api/articles/bannanas/comments")
-      .expect(400)
-      .then(({ body: { msg } }) => {
-        expect(msg).toBe("Bad request: Invalid input");
-      });
-  });
-});
-
 describe("PATCH /api/articles/:article_id", () => {
   test("status 200: responds with an updated article object incrementing the votes", () => {
     return request(app)
@@ -284,6 +228,143 @@ describe("PATCH /api/articles/:article_id", () => {
       .expect(400)
       .then(({ body: { msg } }) => {
         expect(msg).toBe("Bad request: Invalid input");
+      });
+  });
+});
+
+describe("GET /api/articles/:article_id/comments", () => {
+  test("status 200: responds with a comments array for the given article_id in which the comment objects have the following properties", () => {
+    return request(app)
+      .get("/api/articles/1/comments")
+      .expect(200)
+      .then(({ body: { comments } }) => {
+        expect(comments).toBeInstanceOf(Array);
+        expect(comments).toHaveLength(11);
+        comments.forEach((comment) => {
+          expect(comment.article_id).toBe(1);
+          expect(comment).toEqual(
+            expect.objectContaining({
+              comment_id: expect.any(Number),
+              votes: expect.any(Number),
+              created_at: expect.any(String),
+              author: expect.any(String),
+              body: expect.any(String),
+            })
+          );
+        });
+      });
+  });
+  test("status 200: responds with an empty comments array when passed a valid article_id", () => {
+    return request(app)
+      .get("/api/articles/2/comments")
+      .expect(200)
+      .then(({ body: { comments } }) => {
+        expect(comments).toHaveLength(0);
+      });
+  });
+  test("status 404: responds for invalid paths in comments", () => {
+    return request(app)
+      .get("/api/articles/2/coments")
+      .expect(404)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("Invalid path");
+      });
+  });
+  test("status 404: responds for article_id that doesn't exist", () => {
+    return request(app)
+      .get("/api/articles/528694/comments")
+      .expect(404)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("No article found for article_id: 528694");
+      });
+  });
+  test("status 400: responds for invalid data article_id path", () => {
+    return request(app)
+      .get("/api/articles/bannanas/comments")
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("Bad request: Invalid input");
+      });
+  });
+});
+
+describe("POST /api/articles/:article_id/comments", () => {
+  test("status 201: responds with a posted comment added to the right article", () => {
+    return request(app)
+      .post("/api/articles/1/comments")
+      .send({ username: "butter_bridge", body: "Amazing news!" })
+      .expect(201)
+      .then(({ body }) => {
+        expect(body).toBeInstanceOf(Object);
+        expect(body.comment).toEqual(
+          expect.objectContaining({
+            article_id: expect.any(Number),
+            body: expect.any(String),
+            votes: expect.any(Number),
+            author: expect.any(String),
+            comment_id: expect.any(Number),
+            created_at: expect.any(String),
+          })
+        );
+      });
+  });
+  test("status 201: responds with a posted comment added to the right article with correct data", () => {
+    return request(app)
+      .post("/api/articles/1/comments")
+      .send({ username: "butter_bridge", body: "Amazing news!" })
+      .expect(201)
+      .then(({ body }) => {
+        expect(body).toBeInstanceOf(Object);
+        expect(body.comment).toEqual({
+          article_id: 1,
+          body: "Amazing news!",
+          votes: 0,
+          author: "butter_bridge",
+          comment_id: expect.any(Number),
+          created_at: expect.any(String),
+        });
+      });
+  });
+  test("status 404: responds for invalid paths in comments", () => {
+    return request(app)
+      .get("/api/articles/2/comentz")
+      .expect(404)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("Invalid path");
+      });
+  });
+  test("status 404: responds for article_id that doesn't exist", () => {
+    return request(app)
+      .get("/api/articles/123456/comments")
+      .expect(404)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("No article found for article_id: 123456");
+      });
+  });
+  test("status 400: responds for invalid data article_id path", () => {
+    return request(app)
+      .get("/api/articles/oranges/comments")
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("Bad request: Invalid input");
+      });
+  });
+  test("status 400: responds when post request sent with no body data", () => {
+    return request(app)
+      .post("/api/articles/1/comments")
+      .send({ username: "butter_bridge", body: null })
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("Bad request: Invalid input in body");
+      });
+  });
+  test("status 400: responds when post request sent with no username", () => {
+    return request(app)
+      .post("/api/articles/1/comments")
+      .send({ username: null, body: "Amazing news!" })
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("Bad request: Invalid input in username");
       });
   });
 });
