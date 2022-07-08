@@ -63,7 +63,7 @@ describe("GET /api/articles", () => {
         });
       });
   });
-  test("status 200: responds with the articles array sorted by date in descending order", () => {
+  test("status 200: responds with the articles array sorted by date in descending order by default", () => {
     return request(app)
       .get("/api/articles")
       .expect(200)
@@ -71,6 +71,14 @@ describe("GET /api/articles", () => {
         expect(articles).toBeSortedBy("created_at", { descending: true });
       });
   });
+  // test("status 200: responds with the articles array sorted by title in descending order when accepts a query", () => {
+  //   return request(app)
+  //     .get("/api/articles?sort_by=title")
+  //     .expect(200)
+  //     .then(({ body: { articles } }) => {
+  //       expect(articles).toBeSortedBy("title", { descending: true });
+  //     });
+  // });
   test("status 404: responds for invalid paths in articles", () => {
     return request(app)
       .get("/api/articules")
