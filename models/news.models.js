@@ -93,6 +93,29 @@ exports.addComment = (article_id, username, body) => {
     });
 };
 
+exports.removeComment = (comment_id) => {
+  if (isNaN(comment_id)) {
+    return Promise.reject({
+      status: 400,
+      msg: "Bad request: comment_id should be a number",
+    });
+  }
+
+  return db
+    .query("DELETE FROM comments WHERE comment_id = $1 RETURNING *;", [
+      comment_id,
+    ])
+    .then((results) => {
+      if (!results.rows[0]) {
+        return Promise.reject({
+          status: 404,
+          msg: `No comment found with comment_id ${comment_id}`,
+        });
+      }
+      return results.rows[0];
+    });
+};
+
 exports.selectUsers = () => {
   return db.query("SELECT * FROM users;").then((results) => {
     return results.rows;

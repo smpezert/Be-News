@@ -138,12 +138,13 @@ describe("GET /api/articles/:article_id", () => {
         expect(+comment_count).not.toBeNaN();
       });
   });
-  test("status 404: responds for article_id path that there is not exist", () => {
+  test("status 404: responds for article_id path that doesn't exist", () => {
+    const article_id = 30000;
     return request(app)
-      .get("/api/articles/30000000")
+      .get(`/api/articles/${article_id}`)
       .expect(404)
       .then(({ body: { msg } }) => {
-        expect(msg).toBe("No article found for article_id: 30000000");
+        expect(msg).toBe(`No article found for article_id: ${article_id}`);
       });
   });
   test("status 400: responds for invalid data article_id path", () => {
@@ -197,12 +198,13 @@ describe("PATCH /api/articles/:article_id", () => {
         );
       });
   });
-  test("status 404: responds for article_id that there is not exist", () => {
+  test("status 404: responds for article_id that doesn't exist", () => {
+    const article_id = 50000;
     return request(app)
-      .get("/api/articles/50000000")
+      .get(`/api/articles/${article_id}`)
       .expect(404)
       .then(({ body: { msg } }) => {
-        expect(msg).toBe("No article found for article_id: 50000000");
+        expect(msg).toBe(`No article found for article_id: ${article_id}`);
       });
   });
   test("status 400: responds for invalid data article_id path", () => {
@@ -271,11 +273,12 @@ describe("GET /api/articles/:article_id/comments", () => {
       });
   });
   test("status 404: responds for article_id that doesn't exist", () => {
+    const article_id = 528694;
     return request(app)
-      .get("/api/articles/528694/comments")
+      .get(`/api/articles/${article_id}/comments`)
       .expect(404)
       .then(({ body: { msg } }) => {
-        expect(msg).toBe("No article found for article_id: 528694");
+        expect(msg).toBe(`No article found for article_id: ${article_id}`);
       });
   });
   test("status 400: responds for invalid data article_id path", () => {
@@ -334,11 +337,12 @@ describe("POST /api/articles/:article_id/comments", () => {
       });
   });
   test("status 404: responds for article_id that doesn't exist", () => {
+    const article_id = 123456;
     return request(app)
-      .get("/api/articles/123456/comments")
+      .get(`/api/articles/${article_id}/comments`)
       .expect(404)
       .then(({ body: { msg } }) => {
-        expect(msg).toBe("No article found for article_id: 123456");
+        expect(msg).toBe(`No article found for article_id: ${article_id}`);
       });
   });
   test("status 400: responds for invalid data article_id path", () => {
@@ -365,6 +369,41 @@ describe("POST /api/articles/:article_id/comments", () => {
       .expect(400)
       .then(({ body: { msg } }) => {
         expect(msg).toBe("Bad request: Invalid input in username");
+      });
+  });
+});
+
+describe("DELETE /api/comments/:comment_id", () => {
+  test("status 200: responds deleting the appropriate commend_id when accepts a a request", () => {
+    const comment_id = 1;
+    return request(app)
+      .delete(`/api/comments/${comment_id}`)
+      .expect(204)
+      .then(() => {
+        return db
+          .query(`SELECT comment_id FROM comments WHERE comment_id=$1`, [
+            comment_id,
+          ])
+          .then(({ rows }) => {
+            expect(rows.length).toBe(0);
+          });
+      });
+  });
+  test("status 404: responds when delete request send for a comment_id that doesn't exist", () => {
+    const comment_id = 345678;
+    return request(app)
+      .delete(`/api/comments/${comment_id}`)
+      .expect(404)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe(`No comment found with comment_id ${comment_id}`);
+      });
+  });
+  test("status 400: responds when delete request send for a comment_id that doesn't exist", () => {
+    return request(app)
+      .delete("/api/comments/bananas")
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("Bad request: comment_id should be a number");
       });
   });
 });
