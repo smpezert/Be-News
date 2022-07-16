@@ -55,15 +55,16 @@ describe("GET /api/articles", () => {
               title: expect.any(String),
               article_id: expect.any(Number),
               topic: expect.any(String),
+              body: expect.any(String),
               created_at: expect.any(String),
               votes: expect.any(Number),
-              comment_count: expect.any(String),
+              comment_count: expect.any(Number),
             })
           );
         });
       });
   });
-  test("status 200: responds with the articles array sorted by date in descending order by default", () => {
+  test("status 200: responds with an articles array sorted by date by default in descending order by default", () => {
     return request(app)
       .get("/api/articles")
       .expect(200)
@@ -71,14 +72,112 @@ describe("GET /api/articles", () => {
         expect(articles).toBeSortedBy("created_at", { descending: true });
       });
   });
-  // test("status 200: responds with the articles array sorted by title in descending order when accepts a query", () => {
-  //   return request(app)
-  //     .get("/api/articles?sort_by=title")
-  //     .expect(200)
-  //     .then(({ body: { articles } }) => {
-  //       expect(articles).toBeSortedBy("title", { descending: true });
-  //     });
-  // });
+  test("status 200: responds with an articles array sorted by author in descending order (default) when accepts a query", () => {
+    return request(app)
+      .get("/api/articles?sort_by=author")
+      .expect(200)
+      .then(({ body: { articles } }) => {
+        expect(articles).toBeSortedBy("author", { descending: true });
+      });
+  });
+  test("status 200: responds with the articles array sorted by article_id in ascending order when accepts a query", () => {
+    return request(app)
+      .get("/api/articles?sort_by=article_id&order_by=asc")
+      .expect(200)
+      .then(({ body: { articles } }) => {
+        expect(articles).toBeSortedBy("article_id");
+      });
+  });
+  test("status 200: responds with an articles array for the specified topic in the query sorted by votes in descending order (default)", () => {
+    return request(app)
+      .get("/api/articles?topic=cats&sort_by=votes")
+      .expect(200)
+      .then(({ body: { articles } }) => {
+        expect(articles).toHaveLength(1);
+        expect(articles).toBeSortedBy("votes", { descending: true });
+        expect(articles).toEqual([
+          {
+            article_id: 5,
+            title: "UNCOVERED: catspiracy to bring down democracy",
+            topic: "cats",
+            author: "rogersop",
+            body: "Bastet walks amongst us, and the cats are taking arms!",
+            created_at: "2020-08-03T13:14:00.000Z",
+            votes: 0,
+            comment_count: 2,
+          },
+        ]);
+      });
+  });
+  test("status 200: responds with an articles array for the specified topic in the query sorted by title in ascending order", () => {
+    return request(app)
+      .get("/api/articles?topic=cats&sort_by=title&order_by=asc")
+      .expect(200)
+      .then(({ body: { articles } }) => {
+        expect(articles).toHaveLength(1);
+        expect(articles).toBeSortedBy("title");
+        expect(articles).toEqual([
+          {
+            article_id: 5,
+            title: "UNCOVERED: catspiracy to bring down democracy",
+            topic: "cats",
+            author: "rogersop",
+            body: "Bastet walks amongst us, and the cats are taking arms!",
+            created_at: "2020-08-03T13:14:00.000Z",
+            votes: 0,
+            comment_count: 2,
+          },
+        ]);
+      });
+  });
+  test("status 200: responds with an empty articles array when topic doesn't exist", () => {
+    return request(app)
+      .get("/api/articles?topic=none")
+      .expect(200)
+      .then(({ body: { articles } }) => {
+        expect(articles).toEqual([]);
+      });
+  });
+  test("status 404: responds for a sort query that doesn't exist", () => {
+    return request(app)
+      .get("/api/articles?sort_by=hi")
+      .expect(404)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("Sort query not found");
+      });
+  });
+  test("status 400: responds for invalid sort queries that are numbers", () => {
+    return request(app)
+      .get("/api/articles?sort_by=1")
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("Bad request: Sort query should not be a number");
+      });
+  });
+  test("status 400: responds for invalid order queries", () => {
+    return request(app)
+      .get("/api/articles?order_by=hello")
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("Bad request: Invalid order query");
+      });
+  });
+  test("status 400: responds for invalid sort and order queries", () => {
+    return request(app)
+      .get("/api/articles?sort_by=hi&order_by=hello")
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("Bad request: Invalid sort and order queries");
+      });
+  });
+  test("status 400: responds for invalid topic queries", () => {
+    return request(app)
+      .get("/api/articles?topic=1")
+      .expect(400)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe("Bad request: Topic query should not be a number");
+      });
+  });
   test("status 404: responds for invalid paths in articles", () => {
     return request(app)
       .get("/api/articules")
@@ -105,13 +204,14 @@ describe("GET /api/articles/:article_id", () => {
             body: expect.any(String),
             created_at: expect.any(String),
             votes: expect.any(Number),
+            comment_count: expect.any(Number),
           })
         );
       });
   });
   test("status 200: responds with a specific number of article object containing specific properties", () => {
     return request(app)
-      .get(`/api/articles/1`)
+      .get("/api/articles/1")
       .expect(200)
       .then(({ body }) => {
         expect(body).toBeInstanceOf(Object);
@@ -124,17 +224,9 @@ describe("GET /api/articles/:article_id", () => {
             body: "I find this existence challenging",
             created_at: "2020-07-09T20:11:00.000Z",
             votes: 100,
+            comment_count: 11,
           })
         );
-      });
-  });
-  test("status 200: (comment_count) responds with an article object including comment count property", () => {
-    return request(app)
-      .get("/api/articles/1")
-      .expect(200)
-      .then(({ body }) => {
-        expect(body).toHaveProperty("comment_count");
-        expect(body.comment_count).toBe("11");
       });
   });
   test("status 200: (comment_count) responds with the right data type of comment count ", () => {
@@ -142,11 +234,11 @@ describe("GET /api/articles/:article_id", () => {
       .get("/api/articles/1")
       .expect(200)
       .then(({ body: { comment_count } }) => {
-        expect(typeof +comment_count).toBe("number");
-        expect(+comment_count).not.toBeNaN();
+        expect(typeof comment_count).toBe("number");
+        expect(comment_count).not.toBeNaN();
       });
   });
-  test("status 404: responds for article_id path that there is not exist", () => {
+  test("status 404: responds for article_id path that doesn't exist", () => {
     return request(app)
       .get("/api/articles/30000000")
       .expect(404)
