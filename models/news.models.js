@@ -26,12 +26,14 @@ exports.selectArticles = (sort_by = "created_at", order_by = "DESC", topic) => {
       msg: "Bad request: Sort query should not be a number",
     });
   }
+
   if (!isNaN(topic)) {
     return Promise.reject({
       status: 400,
       msg: "Bad request: Topic query should not be a number",
     });
   }
+
   if (!sortedOptions.includes(sort_by) && !orderOptions.includes(order_by)) {
     return Promise.reject({
       status: 400,
@@ -50,18 +52,40 @@ exports.selectArticles = (sort_by = "created_at", order_by = "DESC", topic) => {
     });
   }
 
-  let queryStr =
-    "SELECT articles.*, COUNT(comments.article_id)::int AS comment_count FROM articles LEFT JOIN comments ON comments.article_id = articles.article_id";
+  return db
+    .query(`SELECT topics.slug FROM topics WHERE topics.slug=$1`, [topic])
+    .then((results) => {
+      const topicOptions = results.rows.map((topicName) => {
+        return topicName.slug;
+      });
+      return topicOptions[0];
+    })
+    .then((topicOptions) => {
+      let queryStr =
+        "SELECT articles.*, COUNT(comments.article_id)::int AS comment_count FROM articles LEFT JOIN comments ON comments.article_id = articles.article_id";
 
-  if (topic) {
-    queryStr += ` WHERE articles.topic=$1`;
-    queryValues.push(topic);
-  }
-  queryStr += ` GROUP BY articles.article_id ORDER BY articles.${sort_by} ${order_by};`;
+      if (topic) {
+        if (topic !== topicOptions) {
+          return Promise.reject({
+            status: 404,
+            msg: `Topic ${topic} not found`,
+          });
+        }
+        queryStr += ` WHERE articles.topic=$1`;
+        queryValues.push(topic);
+      }
+      queryStr += ` GROUP BY articles.article_id ORDER BY articles.${sort_by} ${order_by};`;
 
-  return db.query(queryStr, queryValues).then((results) => {
-    return results.rows;
-  });
+      return db.query(queryStr, queryValues).then((results) => {
+        if (results.rowCount === 0) {
+          return Promise.reject({
+            status: 404,
+            msg: `No articles found for the topic ${topic}`,
+          });
+        }
+        return results.rows;
+      });
+    });
 };
 
 exports.selectArticleById = (article_id) => {

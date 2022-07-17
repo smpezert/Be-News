@@ -130,15 +130,7 @@ describe("GET /api/articles", () => {
         ]);
       });
   });
-  test("status 200: responds with an empty articles array when topic doesn't exist", () => {
-    return request(app)
-      .get("/api/articles?topic=none")
-      .expect(200)
-      .then(({ body: { articles } }) => {
-        expect(articles).toEqual([]);
-      });
-  });
-  test("status 404: responds for a sort query that doesn't exist", () => {
+  test("status 404: responds for a sort query that doesn't exist (yet)", () => {
     return request(app)
       .get("/api/articles?sort_by=hi")
       .expect(404)
@@ -168,6 +160,24 @@ describe("GET /api/articles", () => {
       .expect(400)
       .then(({ body: { msg } }) => {
         expect(msg).toBe("Bad request: Invalid sort and order queries");
+      });
+  });
+  test("status 404: responds for a topic query that exists, but doesn't have any articles related (yet)", () => {
+    const topic = "paper";
+    return request(app)
+      .get(`/api/articles?topic=${topic}`)
+      .expect(404)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe(`No articles found for the topic ${topic}`);
+      });
+  });
+  test("status 404: responds for a topic query that doesn't exist (yet)", () => {
+    const topic = "news";
+    return request(app)
+      .get(`/api/articles?topic=${topic}`)
+      .expect(404)
+      .then(({ body: { msg } }) => {
+        expect(msg).toBe(`Topic ${topic} not found`);
       });
   });
   test("status 400: responds for invalid topic queries", () => {
