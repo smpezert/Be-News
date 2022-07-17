@@ -5,6 +5,7 @@ const {
   updateArticleById,
   selectCommentsByArticleId,
   addComment,
+  removeComment,
   selectUsers,
 } = require("../models/news.models");
 
@@ -83,6 +84,16 @@ exports.postComments = (req, res, next) => {
     .catch((error) => {
       next(error);
     });
+};
+
+exports.deleteComment = (req, res, next) => {
+  const { comment_id } = req.params;
+
+  removeComment(comment_id)
+    .then(() => {
+      res.status(204).send();
+    })
+    .catch((error) => next(error));
 };
 
 exports.getUsers = (req, res, next) => {
