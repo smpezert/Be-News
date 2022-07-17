@@ -6,20 +6,92 @@ exports.selectTopics = () => {
   });
 };
 
-exports.selectArticles = () => {
+exports.selectArticles = (sort_by = "created_at", order_by = "DESC", topic) => {
+  const sortedOptions = [
+    "author",
+    "title",
+    "article_id",
+    "topic",
+    "body",
+    "created_at",
+    "votes",
+    "comment_count",
+  ];
+  const orderOptions = ["asc", "desc", "ASC", "DESC"];
+  const queryValues = [];
+
+  if (!isNaN(sort_by)) {
+    return Promise.reject({
+      status: 400,
+      msg: "Bad request: Sort query should not be a number",
+    });
+  }
+
+  if (!isNaN(topic)) {
+    return Promise.reject({
+      status: 400,
+      msg: "Bad request: Topic query should not be a number",
+    });
+  }
+
+  if (!sortedOptions.includes(sort_by) && !orderOptions.includes(order_by)) {
+    return Promise.reject({
+      status: 400,
+      msg: "Bad request: Invalid sort and order queries",
+    });
+  }
+
+  if (!sortedOptions.includes(sort_by)) {
+    return Promise.reject({ status: 404, msg: "Sort query not found" });
+  }
+
+  if (!orderOptions.includes(order_by)) {
+    return Promise.reject({
+      status: 400,
+      msg: "Bad request: Invalid order query",
+    });
+  }
+
   return db
-    .query(
-      "SELECT articles.*, COUNT(comments.article_id) AS comment_count FROM articles LEFT JOIN comments ON comments.article_id = articles.article_id GROUP BY articles.article_id ORDER BY created_at DESC;"
-    )
+    .query(`SELECT topics.slug FROM topics WHERE topics.slug=$1`, [topic])
     .then((results) => {
-      return results.rows;
+      const topicOptions = results.rows.map((topicName) => {
+        return topicName.slug;
+      });
+      return topicOptions[0];
+    })
+    .then((topicOptions) => {
+      let queryStr =
+        "SELECT articles.*, COUNT(comments.article_id)::int AS comment_count FROM articles LEFT JOIN comments ON comments.article_id = articles.article_id";
+
+      if (topic) {
+        if (topic !== topicOptions) {
+          return Promise.reject({
+            status: 404,
+            msg: `Topic ${topic} not found`,
+          });
+        }
+        queryStr += ` WHERE articles.topic=$1`;
+        queryValues.push(topic);
+      }
+      queryStr += ` GROUP BY articles.article_id ORDER BY articles.${sort_by} ${order_by};`;
+
+      return db.query(queryStr, queryValues).then((results) => {
+        if (results.rowCount === 0) {
+          return Promise.reject({
+            status: 404,
+            msg: `No articles found for the topic ${topic}`,
+          });
+        }
+        return results.rows;
+      });
     });
 };
 
 exports.selectArticleById = (article_id) => {
   return db
     .query(
-      "SELECT articles.*, COUNT(comments.article_id) AS comment_count FROM articles LEFT JOIN comments ON comments.article_id = articles.article_id WHERE articles.article_id = $1 GROUP BY articles.article_id;",
+      "SELECT articles.*, COUNT(comments.article_id)::int AS comment_count FROM articles LEFT JOIN comments ON comments.article_id = articles.article_id WHERE articles.article_id = $1 GROUP BY articles.article_id;",
       [article_id]
     )
     .then((results) => {
