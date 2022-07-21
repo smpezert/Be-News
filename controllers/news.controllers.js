@@ -9,6 +9,12 @@ const {
   selectUsers,
 } = require("../models/news.models");
 
+const endpoints = require("../endpoints.json");
+
+exports.getApi = (req, res, next) => {
+  res.status(200).send({ availableEndpoints: endpoints });
+};
+
 exports.getTopics = (req, res, next) => {
   selectTopics()
     .then((topic) => {
