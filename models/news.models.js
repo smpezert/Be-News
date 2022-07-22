@@ -77,12 +77,6 @@ exports.selectArticles = (sort_by = "created_at", order_by = "DESC", topic) => {
       queryStr += ` GROUP BY articles.article_id ORDER BY articles.${sort_by} ${order_by};`;
 
       return db.query(queryStr, queryValues).then((results) => {
-        if (results.rowCount === 0) {
-          return Promise.reject({
-            status: 404,
-            msg: `No articles found for the topic ${topic}`,
-          });
-        }
         return results.rows;
       });
     });
@@ -190,6 +184,7 @@ exports.removeComment = (comment_id) => {
 
 exports.selectUsers = () => {
   return db.query("SELECT * FROM users;").then((results) => {
+    console.log(results.rows);
     return results.rows;
   });
 };

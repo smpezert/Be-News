@@ -12,6 +12,30 @@ afterAll(() => {
   if (db.end) db.end();
 });
 
+describe("GET /api", () => {
+  test("status 200: responds with a JSON object with keys that describe all the available endpoints in the API", () => {
+    return request(app)
+      .get("/api")
+      .expect(200)
+      .then(({ body: { availableEndpoints } }) => {
+        expect(availableEndpoints).toBeInstanceOf(Object);
+        expect(availableEndpoints).toEqual(
+          expect.objectContaining({
+            "GET /api": expect.any(Object),
+            "GET /api/topics": expect.any(Object),
+            "GET /api/articles": expect.any(Object),
+            "GET /api/articles/:article_id": expect.any(Object),
+            "PATCH /api/articles/:article_id": expect.any(Object),
+            "GET /api/articles/:article_id/comments": expect.any(Object),
+            "POST /api/articles/:article_id/comments": expect.any(Object),
+            "DELETE /api/comments/:comment_id": expect.any(Object),
+            "GET /api/users": expect.any(Object),
+          })
+        );
+      });
+  });
+});
+
 describe("GET /api/topics", () => {
   test("status 200: responds with an array of topic objects", () => {
     return request(app)
@@ -130,6 +154,16 @@ describe("GET /api/articles", () => {
         ]);
       });
   });
+  test("status 200: responds with an empty array for a topic query that exists, but doesn't have any articles related (yet)", () => {
+    const topic = "paper";
+    return request(app)
+      .get(`/api/articles?topic=${topic}`)
+      .expect(200)
+      .then(({ body: { articles } }) => {
+        expect(articles).toHaveLength(0);
+        expect(articles).toEqual([]);
+      });
+  });
   test("status 404: responds for a sort query that doesn't exist (yet)", () => {
     return request(app)
       .get("/api/articles?sort_by=hi")
@@ -160,15 +194,6 @@ describe("GET /api/articles", () => {
       .expect(400)
       .then(({ body: { msg } }) => {
         expect(msg).toBe("Bad request: Invalid sort and order queries");
-      });
-  });
-  test("status 404: responds for a topic query that exists, but doesn't have any articles related (yet)", () => {
-    const topic = "paper";
-    return request(app)
-      .get(`/api/articles?topic=${topic}`)
-      .expect(404)
-      .then(({ body: { msg } }) => {
-        expect(msg).toBe(`No articles found for the topic ${topic}`);
       });
   });
   test("status 404: responds for a topic query that doesn't exist (yet)", () => {
@@ -250,7 +275,7 @@ describe("GET /api/articles/:article_id", () => {
   });
   test("status 404: responds for article_id path that doesn't exist", () => {
     const article_id = 30000;
-    
+
     return request(app)
       .get(`/api/articles/${article_id}`)
       .expect(404)
@@ -485,7 +510,7 @@ describe("POST /api/articles/:article_id/comments", () => {
 });
 
 describe("DELETE /api/comments/:comment_id", () => {
-  test("status 200: responds deleting the appropriate commend_id when accepts a a request", () => {
+  test("status 204: responds deleting the appropriate commend_id when accepts a a request", () => {
     const comment_id = 1;
     return request(app)
       .delete(`/api/comments/${comment_id}`)
