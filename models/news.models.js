@@ -184,7 +184,6 @@ exports.removeComment = (comment_id) => {
 
 exports.selectUsers = () => {
   return db.query("SELECT * FROM users;").then((results) => {
-    console.log(results.rows);
     return results.rows;
   });
 };
