@@ -4,7 +4,7 @@
 
 This project is a backend API that made as part of the Northcoders Bootcamp. The main aim of the project is to provide access to data as well as update them programmatically to a frontend architecture. The deployed version of project can be found here:
 
-https://sobe-news.herokuapp.com/api
+https://sobe-news-api.onrender.com/api
 
 ### Links to the API
 
@@ -62,10 +62,10 @@ Into each file, add `PGDATABASE=nc_news_test` into the `.env.test file` and `PGD
 - dotenv
 - express
 - pg
+- husky
 
 ### Development Dependencies
 
-- husky
 - jest
 - jest-extended
 - jest-sorted
@@ -77,4 +77,4 @@ Into each file, add `PGDATABASE=nc_news_test` into the `.env.test file` and `PGD
 ### Sofia Bezertzi
 
 - GitHub: https://github.com/smpezert
-- LinkedIn: https://www.linkedin.com/in/sofia-bezertzi-88b92893/
+- LinkedIn: https://www.linkedin.com/in/sofiabezertzi/
